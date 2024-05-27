@@ -1,0 +1,124 @@
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+
+public class CatchTheBallGame extends JPanel implements ActionListener {
+
+    private Timer timer;
+    private int ballX, ballY, ballSpeedY;
+    private int paddleX, paddleWidth, paddleHeight;
+    private int score;
+    private boolean gameOver;
+
+    public CatchTheBallGame() {
+        initGame();
+    }
+
+    private void initGame() {
+        setFocusable(true);
+        setPreferredSize(new Dimension(800, 600));
+        addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyPressed(KeyEvent e) {
+                movePaddle(e);
+            }
+        });
+
+        timer = new Timer(10, this);
+        timer.start();
+
+        resetGame();
+    }
+
+    private void resetGame() {
+        ballX = 400;
+        ballY = 0;
+        ballSpeedY = 2;
+        paddleX = 350;
+        paddleWidth = 100;
+        paddleHeight = 20;
+        score = 0;
+        gameOver = false;
+    }
+
+    private void movePaddle(KeyEvent e) {
+        int key = e.getKeyCode();
+        if (key == KeyEvent.VK_LEFT && paddleX > 0) {
+            paddleX -= 20;
+        } else if (key == KeyEvent.VK_RIGHT && paddleX < getWidth() - paddleWidth) {
+            paddleX += 20;
+        }
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        if (!gameOver) {
+            updateBall();
+            checkCollision();
+            repaint();
+        }
+    }
+
+    private void updateBall() {
+        ballY += ballSpeedY;
+
+        if (ballY > getHeight()) {
+            gameOver = true;
+        }
+    }
+
+    private void checkCollision() {
+        if (ballY + 20 >= getHeight() - paddleHeight &&
+            ballX >= paddleX && ballX <= paddleX + paddleWidth) {
+            ballY = 0;
+            ballX = (int) (Math.random() * (getWidth() - 20));
+            score++;
+        }
+    }
+
+    @Override
+    protected void paintComponent(Graphics g) {
+        super.paintComponent(g);
+
+        if (gameOver) {
+            drawGameOver(g);
+        } else {
+            drawGame(g);
+        }
+
+        Toolkit.getDefaultToolkit().sync();
+    }
+
+    private void drawGame(Graphics g) {
+        g.setColor(Color.RED);
+        g.fillOval(ballX, ballY, 20, 20);
+
+        g.setColor(Color.BLUE);
+        g.fillRect(paddleX, getHeight() - paddleHeight, paddleWidth, paddleHeight);
+
+        g.setColor(Color.BLACK);
+        g.setFont(new Font("Arial", Font.BOLD, 20));
+        g.drawString("Score: " + score, 10, 20);
+    }
+
+    private void drawGameOver(Graphics g) {
+        g.setColor(Color.BLACK);
+        g.setFont(new Font("Arial", Font.BOLD, 50));
+        g.drawString("Game Over", getWidth() / 2 - 150, getHeight() / 2 - 25);
+        g.setFont(new Font("Arial", Font.BOLD, 30));
+        g.drawString("Final Score: " + score, getWidth() / 2 - 100, getHeight() / 2 + 25);
+    }
+
+    public static void main(String[] args) {
+        JFrame frame = new JFrame("Catch The Ball Game");
+        CatchTheBallGame gamePanel = new CatchTheBallGame();
+        frame.add(gamePanel);
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.pack();
+        frame.setLocationRelativeTo(null);
+        frame.setVisible(true);
+    }
+}
